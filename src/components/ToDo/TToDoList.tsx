@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./ToDoList.css";
+import trashImage from "/trash.circle.fill.png";
+import plusImage from "/plus.circle.fill.png";
 interface Todo {
   id: number;
   title: string;
@@ -20,7 +22,7 @@ interface MovieDetails {
   genre: string;
   streamingService: string;
 }
-const TodoList: React.FC = () => {
+const TTodoList: React.FC = () => {
   const [movies, setMovies] = useState<Todo[]>([]);
   const [tvShows, setTvShows] = useState<Todo[]>([]);
   const [newMovie, setNewMovie] = useState<string>("");
@@ -113,6 +115,17 @@ const TodoList: React.FC = () => {
       }
     }
   };
+  useEffect(() => {
+    fetch("/movies")
+      .then((response) => response.json())
+      .then((data) => setMovies(data))
+      .catch((error) => console.error("Error fetching movies:", error));
+
+    fetch("/tv-shows")
+      .then((response) => response.json())
+      .then((data) => setTvShows(data))
+      .catch((error) => console.error("Error fetching TV shows:", error));
+  }, []);
   const handleDetailsChange = (
     id: number,
     field: keyof TVShowDetails,
@@ -140,95 +153,6 @@ const TodoList: React.FC = () => {
 
   return (
     <div className="to-do-list-block">
-      <div className="movies-list">
-        <h3>Movies to Watch ({movies.length})</h3>
-        <input
-          type="text"
-          value={newMovie}
-          onChange={(e) => setNewMovie(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              handleAddMovie();
-            }
-          }}
-        />
-        <button onClick={handleAddMovie}>Add Movie</button>
-        <ul>
-          {movies.map((movie) => (
-            <li key={movie.id} className={movie.checked ? "checked" : ""}>
-              {movie.title}
-              <label className="movie-checkbox-label">
-                <input
-                  className="sub-task-checkbox movie-checkbox"
-                  type="checkbox"
-                  checked={movie.checked}
-                  onChange={() => handleToggleCheck(movie.id, true)}
-                />
-                <span className="movie-detail-checkmark"></span>
-              </label>
-              <button onClick={() => handleDeleteItem(movie.id, true)}>
-                Delete
-              </button>
-              {movie.checked && (
-                <div className="subtask-panel">
-                  <label>Director:</label>
-                  <input
-                    type="text"
-                    value={movie.details.director}
-                    onChange={(e) =>
-                      handleDetailsChange(
-                        movie.id,
-                        "director",
-                        e.target.value,
-                        true
-                      )
-                    }
-                  />
-                  <label>Release Year:</label>
-                  <input
-                    type="text"
-                    value={movie.details.releaseYear}
-                    onChange={(e) =>
-                      handleDetailsChange(
-                        movie.id,
-                        "releaseYear",
-                        e.target.value,
-                        true
-                      )
-                    }
-                  />
-                  <label>Notable Actors:</label>
-                  <input
-                    type="text"
-                    value={movie.details.notableActors}
-                    onChange={(e) =>
-                      handleDetailsChange(
-                        movie.id,
-                        "notableActors",
-                        e.target.value,
-                        true
-                      )
-                    }
-                  />
-                  <label>Genre:</label>
-                  <input
-                    type="text"
-                    value={movie.details.genre}
-                    onChange={(e) =>
-                      handleDetailsChange(
-                        movie.id,
-                        "genre",
-                        e.target.value,
-                        true
-                      )
-                    }
-                  />
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
       <div className="tv-shows-list">
         <h3>TV Shows to Watch ({tvShows.length})</h3>
         <input
@@ -241,7 +165,9 @@ const TodoList: React.FC = () => {
             }
           }}
         />
-        <button onClick={handleAddTvShow}>Add TV Show</button>
+        <button className="add-tv-show-button" onClick={handleAddTvShow}>
+          <img src={plusImage} alt="add tv show" style={{ width: "18px" }} />
+        </button>
         <ul>
           {tvShows.map((tvShow) => (
             <li key={tvShow.id} className={tvShow.checked ? "checked" : ""}>
@@ -252,8 +178,11 @@ const TodoList: React.FC = () => {
                 checked={tvShow.checked}
                 onChange={() => handleToggleCheck(tvShow.id, false)}
               />
-              <button onClick={() => handleDeleteItem(tvShow.id, false)}>
-                Delete
+              <button
+                className="delete-tv-show-button"
+                onClick={() => handleDeleteItem(tvShow.id, false)}
+              >
+                <img src={trashImage} alt="delete" style={{ width: "18px" }} />
               </button>
               {tvShow.checked && (
                 <div className="subtask-panel">
@@ -319,4 +248,4 @@ const TodoList: React.FC = () => {
   );
 };
 
-export default TodoList;
+export default TTodoList;
