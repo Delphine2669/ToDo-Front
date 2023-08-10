@@ -1,0 +1,27 @@
+.to-do-list-block {
+  opacity: 0.8;
+  max-width: fit-content;
+  display: flex;
+  gap: 8dvw;
+}
+
+.movies-list {
+  opacity: 0.9;
+  max-width: 30dvw;
+  border: 0.8dvw solid var(--border-red);
+  border-radius: 2dvh;
+}
+.tv-shows-list {
+  background-color: chocolate;
+  margin: 5dvh 5dvw;
+  padding: 2dvh;
+  max-width: 30dvw;
+  border: 0.8dvw solid var(--border-red);
+  border-radius: 2dvh;
+}
+.tv-shows-list,
+.movies-list {
+  background-color: var(--brand-red);
+  margin: 5dvh 5dvw;
+  padding: 2dvh;
+}
