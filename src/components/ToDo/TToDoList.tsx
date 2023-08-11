@@ -2,12 +2,15 @@ import React, { useState, useEffect } from "react";
 import "./ToDoList.css";
 import trashImage from "/trash.circle.fill.png";
 import plusImage from "/plus.circle.fill.png";
+
 interface Todo {
   id: number;
   title: string;
   checked: boolean;
-  details: TVShowDetails | MovieDetails;
+  details: TVShowDetails;
+  editing: boolean;
 }
+
 interface TVShowDetails {
   seasons: number;
   releaseYear: number;
@@ -15,142 +18,118 @@ interface TVShowDetails {
   genre: string;
   streamingService: string;
 }
-interface MovieDetails {
-  releaseYear: number;
-  notableActors: string;
-  director: string;
-  genre: string;
-  streamingService: string;
-}
-const TTodoList: React.FC = () => {
-  const [movies, setMovies] = useState<Todo[]>([]);
-  const [tvShows, setTvShows] = useState<Todo[]>([]);
-  const [newMovie, setNewMovie] = useState<string>("");
-  const [newTvShow, setNewTvShow] = useState<string>("");
 
-  const handleAddMovie = () => {
-    if (newMovie.trim() !== "") {
-      setMovies([
-        ...movies,
-        {
-          id: Date.now(),
-          title: newMovie,
-          checked: false,
-          details: {
-            director: "",
-            releaseYear: 0,
-            notableActors: "",
-            genre: "",
-            streamingService: "",
-          },
-        },
-      ]);
-      setNewMovie("");
-    }
-  };
+const TTodoList: React.FC = () => {
+  const [tvShows, setTvShows] = useState<Todo[]>([]);
+  const [newTvShow, setNewTvShow] = useState<string>("");
+  const backendServerUrl = "http://localhost:5000";
+
+  useEffect(() => {
+    fetch(`${backendServerUrl}/tv-shows`)
+      .then((response) => response.json())
+      .then((fetchedTvShows) => {
+        setTvShows(fetchedTvShows);
+      })
+      .catch((error) => console.error("Error fetching TV shows:", error));
+  }, []);
 
   const handleAddTvShow = () => {
     if (newTvShow.trim() !== "") {
-      setTvShows([
-        ...tvShows,
-        {
-          id: Date.now(),
-          title: newTvShow,
-          checked: false,
-          details: {
-            seasons: 0,
-            releaseYear: 0,
-            notableActors: "",
-            genre: "",
-            streamingService: "",
-          },
+      const newTvShowEntry: Todo = {
+        id: Date.now(),
+        title: newTvShow,
+        checked: false,
+        editing: false,
+        details: {
+          seasons: 0,
+          releaseYear: 0,
+          notableActors: "",
+          genre: "",
+          streamingService: "",
         },
-      ]);
-      setNewTvShow("");
+      };
+
+      fetch(`${backendServerUrl}/tv-shows`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newTvShowEntry),
+      })
+        .then((response) => response.json())
+        .then((createdTvShow) => {
+          setTvShows([...tvShows, createdTvShow]);
+          setNewTvShow("");
+          window.location.reload();
+        })
+        .catch((error) => console.error("Error creating new TV show :", error));
     }
   };
 
-  const handleDeleteItem = (id: number, isMovie: boolean) => {
-    if (isMovie) {
-      const updatedMovies = movies.filter((movie) => movie.id !== id);
-      setMovies(updatedMovies);
-    } else {
-      const updatedTvShows = tvShows.filter((tvShow) => tvShow.id !== id);
-      setTvShows(updatedTvShows);
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddTvShow();
     }
   };
 
-  const handleToggleCheck = (id: number, isMovie: boolean) => {
-    if (isMovie) {
-      const updatedMovies = movies.map((movie) =>
-        movie.id === id ? { ...movie, checked: !movie.checked } : movie
-      );
-      setMovies(updatedMovies);
-    } else {
-      const updatedTvShows = tvShows.map((tvShow) =>
-        tvShow.id === id ? { ...tvShow, checked: !tvShow.checked } : tvShow
-      );
-      setTvShows(updatedTvShows);
-    }
+  const handleDeleteTvShow = (id: number) => {
+    fetch(`${backendServerUrl}/tv-shows/${id}`, {
+      method: "DELETE",
+    })
+      .then((response) => {
+        if (response.ok) {
+          const updatedTvShows = tvShows.filter((tvShow) => tvShow.id !== id);
+          setTvShows(updatedTvShows);
+        } else {
+          console.error("Error deleting TV show:", response.status);
+        }
+        window.location.reload();
+      })
+      .catch((error) => console.error("Error deleting TV show:", error));
   };
-  const handleKeyDownM = (
-    event: React.KeyboardEvent<HTMLInputElement>,
-    isMovie: boolean
-  ) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      if (isMovie) {
-        handleAddMovie();
-      }
-    }
-  };
-  const handleKeyDownT = (
-    event: React.KeyboardEvent<HTMLInputElement>,
-    isTvShow: boolean
-  ) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      if (isTvShow) {
-        handleAddTvShow();
-      }
-    }
-  };
-  useEffect(() => {
-    fetch("/movies")
-      .then((response) => response.json())
-      .then((data) => setMovies(data))
-      .catch((error) => console.error("Error fetching movies:", error));
 
-    fetch("/tv-shows")
-      .then((response) => response.json())
-      .then((data) => setTvShows(data))
-      .catch((error) => console.error("Error fetching TV shows:", error));
-  }, []);
+  const handleToggleCheck = (id: number) => {
+    const updatedTvShows = tvShows.map((tvShow) =>
+      tvShow.id === id
+        ? { ...tvShow, checked: !tvShow.checked, editing: false }
+        : tvShow
+    );
+    setTvShows(updatedTvShows);
+  };
+
   const handleDetailsChange = (
     id: number,
     field: keyof TVShowDetails,
-    value: string,
-    isMovie: boolean
+    value: string
   ) => {
-    const updatedItems = isMovie
-      ? movies.map((movie) =>
-          movie.id === id
-            ? { ...movie, details: { ...movie.details, [field]: value } }
-            : movie
-        )
-      : tvShows.map((tvShow) =>
-          tvShow.id === id
-            ? { ...tvShow, details: { ...tvShow.details, [field]: value } }
-            : tvShow
-        );
+    const updatedItems = tvShows.map((tvShow) =>
+      tvShow.id === id
+        ? { ...tvShow, details: { ...tvShow.details, [field]: value } }
+        : tvShow
+    );
+    setTvShows(updatedItems);
 
-    if (isMovie) {
-      setMovies(updatedItems);
-    } else {
-      setTvShows(updatedItems);
+    if (!tvShows.find((tvShow) => tvShow.id === id)?.editing) {
+      fetch(`${backendServerUrl}/tv-shows/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          field,
+          value,
+        }),
+      })
+        .then((response) => response.json())
+        .then(() => {
+          setTvShows(updatedItems);
+        })
+        .catch((error) =>
+          console.error("Error updating TV show details:", error)
+        );
     }
   };
-
   return (
     <div className="to-do-list-block">
       <div className="tv-shows-list">
@@ -159,11 +138,7 @@ const TTodoList: React.FC = () => {
           type="text"
           value={newTvShow}
           onChange={(e) => setNewTvShow(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              handleAddTvShow();
-            }
-          }}
+          onKeyDown={handleInputKeyDown}
         />
         <button className="add-tv-show-button" onClick={handleAddTvShow}>
           <img src={plusImage} alt="add tv show" style={{ width: "18px" }} />
@@ -172,43 +147,40 @@ const TTodoList: React.FC = () => {
           {tvShows.map((tvShow) => (
             <li key={tvShow.id} className={tvShow.checked ? "checked" : ""}>
               {tvShow.title}
-              <input
-                className="tvshow-checkbox sub-task-checkbox"
-                type="checkbox"
-                checked={tvShow.checked}
-                onChange={() => handleToggleCheck(tvShow.id, false)}
-              />
+              <label className="tvshow-checkbox-label">
+                <input
+                  className="tvshow-checkbox sub-task-checkbox"
+                  type="checkbox"
+                  checked={tvShow.checked}
+                  onChange={() => handleToggleCheck(tvShow.id)}
+                />{" "}
+                <span className="movie-detail-checkmark"></span>
+              </label>
               <button
                 className="delete-tv-show-button"
-                onClick={() => handleDeleteItem(tvShow.id, false)}
+                onClick={() => handleDeleteTvShow(tvShow.id)}
               >
                 <img src={trashImage} alt="delete" style={{ width: "18px" }} />
               </button>
-              {tvShow.checked && (
+              {tvShow.checked && tvShow.details && (
                 <div className="subtask-panel">
                   <label>Seasons:</label>
                   <input
-                    type="text"
-                    value={tvShow.details.seasons}
+                    type="number"
+                    value={tvShow.details.seasons.toString()}
                     onChange={(e) =>
-                      handleDetailsChange(
-                        tvShow.id,
-                        "seasons",
-                        e.target.value,
-                        false
-                      )
+                      handleDetailsChange(tvShow.id, "seasons", e.target.value)
                     }
                   />
                   <label>Release Year:</label>
                   <input
-                    type="text"
+                    type="number"
                     value={tvShow.details.releaseYear}
                     onChange={(e) =>
                       handleDetailsChange(
                         tvShow.id,
                         "releaseYear",
-                        e.target.value,
-                        false
+                        e.target.value
                       )
                     }
                   />
@@ -220,8 +192,7 @@ const TTodoList: React.FC = () => {
                       handleDetailsChange(
                         tvShow.id,
                         "notableActors",
-                        e.target.value,
-                        false
+                        e.target.value
                       )
                     }
                   />
@@ -230,14 +201,33 @@ const TTodoList: React.FC = () => {
                     type="text"
                     value={tvShow.details.genre}
                     onChange={(e) =>
+                      handleDetailsChange(tvShow.id, "genre", e.target.value)
+                    }
+                  />
+                  <label>Streaming service:</label>
+                  <input
+                    type="text"
+                    value={tvShow.details.streamingService}
+                    onChange={(e) =>
                       handleDetailsChange(
                         tvShow.id,
-                        "genre",
-                        e.target.value,
-                        false
+                        "streamingService",
+                        e.target.value
                       )
                     }
                   />
+                  <button
+                    onClick={() => {
+                      const updatedTvShows = tvShows.map((show) =>
+                        show.id === tvShow.id
+                          ? { ...show, editing: !show.editing }
+                          : show
+                      );
+                      setTvShows(updatedTvShows);
+                    }}
+                  >
+                    {tvShow.editing ? "Save" : "Edit"}
+                  </button>
                 </div>
               )}
             </li>

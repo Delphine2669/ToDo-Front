@@ -50,3 +50,16 @@
 .read-the-docs {
   color: #888;
 }
+.app-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.side-todo {
+  display: flex;
+  gap: 20px;
+}
+.side-showing-db {
+  display: flex;
+  gap: 90px;
+}

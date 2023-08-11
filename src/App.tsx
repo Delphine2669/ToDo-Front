@@ -1,15 +1,21 @@
-import MovieList from "./components/MovieToDoList";
+import MovieList from "./components/ShowingTodoLists/MovieToDoList";
 import "./App.css";
-import TodoList from "./components/ToDoList";
-import TvShowList from "./components/TvShowToDoList";
+import TTodoList from "./components/ToDo/TToDoList";
+import MTodoList from "./components/ToDo/MToDoList";
+import TvShowList from "./components/ShowingTodoLists/TvShowToDoList";
 
 function App() {
   return (
     <>
-      <div>
-        <MovieList />
-        <TvShowList />
-        <TodoList />
+      <div className="app-container">
+        <div className="side-todo">
+          <TTodoList />
+          <MTodoList />
+        </div>
+        <div className="side-showing-db">
+          <TvShowList />
+          <MovieList />
+        </div>
       </div>
     </>
   );

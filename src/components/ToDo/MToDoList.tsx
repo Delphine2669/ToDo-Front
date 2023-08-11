@@ -6,15 +6,10 @@ interface Todo {
   id: number;
   title: string;
   checked: boolean;
-  details: TVShowDetails | MovieDetails;
+  details: MovieDetails;
+  editing: boolean;
 }
-interface TVShowDetails {
-  seasons: number;
-  releaseYear: number;
-  notableActors: string;
-  genre: string;
-  streamingService: string;
-}
+
 interface MovieDetails {
   releaseYear: number;
   notableActors: string;
@@ -24,216 +19,195 @@ interface MovieDetails {
 }
 const MTodoList: React.FC = () => {
   const [movies, setMovies] = useState<Todo[]>([]);
-  const [tvShows, setTvShows] = useState<Todo[]>([]);
   const [newMovie, setNewMovie] = useState<string>("");
-  const [newTvShow, setNewTvShow] = useState<string>("");
+  const backendServerUrl = "http://localhost:5000";
+
+  useEffect(() => {
+    fetch(`${backendServerUrl}/movies`)
+      .then((response) => response.json())
+      .then((fetchedMovies) => {
+        setMovies(fetchedMovies);
+      })
+      .catch((error) => console.error("Error fetching Movies:", error));
+  }, []);
 
   const handleAddMovie = () => {
     if (newMovie.trim() !== "") {
-      setMovies([
-        ...movies,
-        {
-          id: Date.now(),
-          title: newMovie,
-          checked: false,
-          details: {
-            director: "",
-            releaseYear: 0,
-            notableActors: "",
-            genre: "",
-            streamingService: "",
-          },
+      const newMovieEntry: Todo = {
+        id: Date.now(),
+        title: newMovie,
+        checked: false,
+        editing: false,
+        details: {
+          director: "",
+          releaseYear: 0,
+          notableActors: "",
+          genre: "",
+          streamingService: "",
         },
-      ]);
-      setNewMovie("");
-    }
-  };
-
-  const handleAddTvShow = () => {
-    if (newTvShow.trim() !== "") {
-      setTvShows([
-        ...tvShows,
-        {
-          id: Date.now(),
-          title: newTvShow,
-          checked: false,
-          details: {
-            seasons: 0,
-            releaseYear: 0,
-            notableActors: "",
-            genre: "",
-            streamingService: "",
-          },
+      };
+      fetch(`${backendServerUrl}/movies`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      ]);
-      setNewTvShow("");
+        body: JSON.stringify(newMovieEntry),
+      })
+        .then((response) => response.json())
+        .then((createdMovie) => {
+          setMovies([...movies, createdMovie]);
+          setNewMovie("");
+          window.location.reload();
+        })
+        .catch((error) =>
+          console.error("Error creating new movie entry:", error)
+        );
     }
   };
 
-  const handleDeleteItem = (id: number, isMovie: boolean) => {
-    if (isMovie) {
-      const updatedMovies = movies.filter((movie) => movie.id !== id);
-      setMovies(updatedMovies);
-    } else {
-      const updatedTvShows = tvShows.filter((tvShow) => tvShow.id !== id);
-      setTvShows(updatedTvShows);
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddMovie();
     }
+  };
+  const handleDeleteMovie = (id: number) => {
+    fetch(`${backendServerUrl}/movies/${id}`, {
+      method: "DELETE",
+    })
+      .then((response) => {
+        if (response.ok) {
+          const updatedMovies = movies.filter((movie) => movie.id !== id);
+          setMovies(updatedMovies);
+        } else {
+          console.error("Error deleting movie:", response.status);
+        }
+        window.location.reload();
+      })
+      .catch((error) => console.error("Error deleting movie:", error));
   };
 
-  const handleToggleCheck = (id: number, isMovie: boolean) => {
-    if (isMovie) {
-      const updatedMovies = movies.map((movie) =>
-        movie.id === id ? { ...movie, checked: !movie.checked } : movie
-      );
-      setMovies(updatedMovies);
-    } else {
-      const updatedTvShows = tvShows.map((tvShow) =>
-        tvShow.id === id ? { ...tvShow, checked: !tvShow.checked } : tvShow
-      );
-      setTvShows(updatedTvShows);
-    }
+  const handleToggleCheck = (id: number) => {
+    const updatedMovies = movies.map((movie) =>
+      movie.id === id ? { ...movie, checked: !movie.checked } : movie
+    );
+    setMovies(updatedMovies);
   };
-  const handleKeyDownM = (
-    event: React.KeyboardEvent<HTMLInputElement>,
-    isMovie: boolean
-  ) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      if (isMovie) {
-        handleAddMovie();
-      }
-    }
-  };
-  const handleKeyDownT = (
-    event: React.KeyboardEvent<HTMLInputElement>,
-    isTvShow: boolean
-  ) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      if (isTvShow) {
-        handleAddTvShow();
-      }
-    }
-  };
-  useEffect(() => {
-    fetch("/movies")
-      .then((response) => response.json())
-      .then((data) => setMovies(data))
-      .catch((error) => console.error("Error fetching movies:", error));
 
-    fetch("/tv-shows")
-      .then((response) => response.json())
-      .then((data) => setTvShows(data))
-      .catch((error) => console.error("Error fetching TV shows:", error));
-  }, []);
   const handleDetailsChange = (
     id: number,
-    field: keyof TVShowDetails,
-    value: string,
-    isMovie: boolean
+    field: keyof MovieDetails,
+    value: string
   ) => {
-    const updatedItems = isMovie
-      ? movies.map((movie) =>
-          movie.id === id
-            ? { ...movie, details: { ...movie.details, [field]: value } }
-            : movie
-        )
-      : tvShows.map((tvShow) =>
-          tvShow.id === id
-            ? { ...tvShow, details: { ...tvShow.details, [field]: value } }
-            : tvShow
-        );
+    const updatedItems = movies.map((movie) =>
+      movie.id === id
+        ? { ...movie, details: { ...movie.details, [field]: value } }
+        : movie
+    );
+    setMovies(updatedItems);
 
-    if (isMovie) {
-      setMovies(updatedItems);
-    } else {
-      setTvShows(updatedItems);
+    if (!movies.find((movie) => movie.id === id)?.editing) {
+      fetch(`${backendServerUrl}/movies/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          field,
+          value,
+        }),
+      })
+        .then((response) => response.json())
+        .then(() => {
+          setMovies(updatedItems);
+        })
+        .catch((error) =>
+          console.error("Error updating movie details:", error)
+        );
     }
   };
-  return(
-<div className="movies-list">
-  <h3>Movies to Watch ({movies.length})</h3>
-  <input
-    type="text"
-    value={newMovie}
-    onChange={(e) => setNewMovie(e.target.value)}
-    onKeyDown={(e) => {
-      if (e.key === "Enter") {
-        handleAddMovie();
-      }
-    }}
-  />
-  <button className="add-movie-button" onClick={handleAddMovie}>
-    <img src={plusImage} alt="add movie" style={{ width: "18px" }} />
-  </button>
-  <ul>
-    {movies.map((movie) => (
-      <li key={movie.id} className={movie.checked ? "checked" : ""}>
-        {movie.title}
-        <label className="movie-checkbox-label">
-          <input
-            className="sub-task-checkbox movie-checkbox"
-            type="checkbox"
-            checked={movie.checked}
-            onChange={() => handleToggleCheck(movie.id, true)}
-          />
-          <span className="movie-detail-checkmark"></span>
-        </label>
-        <button
-          className="delete-movie-button"
-          onClick={() => handleDeleteItem(movie.id, true)}
-        >
-          <img src={trashImage} alt="delete" style={{ width: "18px" }} />
+
+  return (
+    <div className="to-do-list-block">
+      <div className="movies-list">
+        <h3>Movies to Watch ({movies.length})</h3>
+        <input
+          type="text"
+          value={newMovie}
+          onChange={(e) => setNewMovie(e.target.value)}
+          onKeyDown={handleInputKeyDown}
+        />
+        <button className="add-movie-button" onClick={handleAddMovie}>
+          <img src={plusImage} alt="add movie" style={{ width: "18px" }} />
         </button>
-        {movie.checked && (
-          <div className="subtask-panel">
-            <label>Director:</label>
-            <input
-              type="text"
-              value={movie.details.director}
-              onChange={(e) =>
-                handleDetailsChange(movie.id, "director", e.target.value, true)
-              }
-            />
-            <label>Release Year:</label>
-            <input
-              type="text"
-              value={movie.details.releaseYear}
-              onChange={(e) =>
-                handleDetailsChange(
-                  movie.id,
-                  "releaseYear",
-                  e.target.value,
-                  true
-                )
-              }
-            />
-            <label>Notable Actors:</label>
-            <input
-              type="text"
-              value={movie.details.notableActors}
-              onChange={(e) =>
-                handleDetailsChange(
-                  movie.id,
-                  "notableActors",
-                  e.target.value,
-                  true
-                )
-              }
-            />
-            <label>Genre:</label>
-            <input
-              type="text"
-              value={movie.details.genre}
-              onChange={(e) =>
-                handleDetailsChange(movie.id, "genre", e.target.value, true)
-              }
-            />
-          </div>
-        )}
-      </li>
-    ))}
-  </ul>
-</div>;
-  )}
-  export default MTodoList
+        <ul>
+          {movies.map((movie) => (
+            <li key={movie.id} className={movie.checked ? "checked" : ""}>
+              {movie.title}
+              <label className="movie-checkbox-label">
+                <input
+                  className="sub-task-checkbox movie-checkbox"
+                  type="checkbox"
+                  checked={movie.checked}
+                  onChange={() => handleToggleCheck(movie.id)}
+                />
+                <span className="movie-detail-checkmark"></span>
+              </label>
+              <button
+                className="delete-movie-button"
+                onClick={() => handleDeleteMovie(movie.id)}
+              >
+                <img src={trashImage} alt="delete" style={{ width: "18px" }} />
+              </button>
+              {movie.checked && movie.details && (
+                <div className="subtask-panel">
+                  <label>Director:</label>
+                  <input
+                    type="text"
+                    value={movie.details.director}
+                    onChange={(e) =>
+                      handleDetailsChange(movie.id, "director", e.target.value)
+                    }
+                  />
+                  <label>Release Year:</label>
+                  <input
+                    type="text"
+                    value={movie.details.releaseYear}
+                    onChange={(e) =>
+                      handleDetailsChange(
+                        movie.id,
+                        "releaseYear",
+                        e.target.value
+                      )
+                    }
+                  />
+                  <label>Notable Actors:</label>
+                  <input
+                    type="text"
+                    value={movie.details.notableActors}
+                    onChange={(e) =>
+                      handleDetailsChange(
+                        movie.id,
+                        "notableActors",
+                        e.target.value
+                      )
+                    }
+                  />
+                  <label>Genre:</label>
+                  <input
+                    type="text"
+                    value={movie.details.genre}
+                    onChange={(e) =>
+                      handleDetailsChange(movie.id, "genre", e.target.value)
+                    }
+                  />
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
+export default MTodoList;
