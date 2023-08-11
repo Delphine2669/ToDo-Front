@@ -84,14 +84,32 @@ const MTodoList: React.FC = () => {
         }
         window.location.reload();
       })
-      .catch((error) => console.error("Error deleting movie:", error));
+      .catch((error) => console.error("Error deleting movie", error));
   };
 
-  const handleToggleCheck = (id: number) => {
+  const handleToggleCheck = async (id: number) => {
     const updatedMovies = movies.map((movie) =>
-      movie.id === id ? { ...movie, checked: !movie.checked } : movie
+      movie.id === id
+        ? { ...movie, checked: !movie.checked, editing: false }
+        : movie
     );
     setMovies(updatedMovies);
+    try {
+      const response = await fetch(`${backendServerUrl}/movies/${id}`);
+      if (response.ok) {
+        const fetchedDetails = await response.json();
+        const updatedItems = updatedMovies.map((movie) =>
+          movie.id === id
+            ? { ...movie, details: fetchedDetails, editing: false }
+            : movie
+        );
+        setMovies(updatedItems);
+      } else {
+        console.error("Error fetching movie details:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching movie details:", error);
+    }
   };
 
   const handleDetailsChange = (
@@ -171,7 +189,7 @@ const MTodoList: React.FC = () => {
                   />
                   <label>Release Year:</label>
                   <input
-                    type="text"
+                    type="number"
                     value={movie.details.releaseYear}
                     onChange={(e) =>
                       handleDetailsChange(
@@ -201,6 +219,18 @@ const MTodoList: React.FC = () => {
                       handleDetailsChange(movie.id, "genre", e.target.value)
                     }
                   />
+                  <button
+                    onClick={() => {
+                      const updatedMovies = movies.map((show) =>
+                        show.id === movie.id
+                          ? { ...show, editing: !show.editing }
+                          : show
+                      );
+                      setMovies(updatedMovies);
+                    }}
+                  >
+                    {movie.editing ? "Save" : "Edit"}
+                  </button>
                 </div>
               )}
             </li>

@@ -1,6 +1,7 @@
 // src/components/MovieList.tsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import "./Showing.css";
 
 const MovieList: React.FC = () => {
   const [movies, setMovies] = useState([]);
@@ -18,12 +19,12 @@ const MovieList: React.FC = () => {
     });
   }, []);
   return (
-    <div>
-      <h2>Movies to Watch</h2>
+    <div className="showing-movie-block">
+      <h2 className="showing-title">Movie Watchlist</h2>
       <ul>
         {movies.map((movie) => (
           <li key={movie.id}>
-            <h3>{movie.title}</h3>
+            <h5>{movie.title}</h5>
             <p>{movie.director}</p>
           </li>
         ))}

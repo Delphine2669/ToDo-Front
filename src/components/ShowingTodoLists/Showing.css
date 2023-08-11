@@ -1,0 +1,30 @@
+ul,
+h2 {
+  color: var(--white-red);
+}
+.showing-title {
+  color: var(--white-red);
+}
+.showing-movie-block,
+.showing-tvshow-block {
+  border-radius: 3dvw;
+  border: 0.6dvw dotted rgb(255, 77, 77);
+  width: 30dvw;
+  font-size: medium;
+  margin-bottom: 5dvh;
+}
+
+@media (prefers-color-scheme: light) {
+  ul,
+  h2 {
+    color: var(--black-red);
+  }
+  .showing-movie-block,
+  .showing-tvshow-block {
+    border-radius: 3dvw;
+    border: 0.6dvw dotted rgb(255, 126, 128);
+  }
+  .showing-title {
+    color: rgba(90, 7, 7, 0.687);
+  }
+}

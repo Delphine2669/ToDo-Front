@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import "./Showing.css";
 
 const TvShowList: React.FC = () => {
   const [tvShows, setTvShows] = useState([]);
@@ -10,12 +11,12 @@ const TvShowList: React.FC = () => {
     });
   }, []);
   return (
-    <div>
-      <h2>Tv Shows to Watch</h2>
+    <div className="showing-tvshow-block">
+      <h2 className="showing-title">Tv Shows Watchlist</h2>
       <ul>
         {tvShows.map((tvShows) => (
           <li key={tvShows.id}>
-            <h3>{tvShows.title}</h3>
+            <h5>{tvShows.title}</h5>
             <p>{tvShows.seasons}</p>
             <p>{tvShows.genre}</p>
             <p>{tvShows.releaseYear}</p>

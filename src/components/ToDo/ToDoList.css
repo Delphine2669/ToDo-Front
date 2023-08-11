@@ -52,3 +52,23 @@ li {
   margin: 5dvh 5dvw;
   padding: 2dvh;
 }
+
+.tv-shows-list > h3,
+.movies-list > h3 {
+  color: rgba(9, 0, 0, 0.825);
+}
+@media (prefers-color-scheme: light) {
+  .tv-shows-list,
+  .movies-list {
+    background-color: var(--secondary-red);
+    color: var(--black-red);
+    border: 0.8dvw solid var(--brand-red);
+  }
+  .add-movie-button,
+  .add-tv-show-button,
+  .delete-movie-button,
+  .delete-tv-show-button {
+    background: var(--secondary-red);
+    border: var(--secondary-red);
+  }
+}

@@ -1,0 +1,28 @@
+.footer-title {
+  display: flex;
+  color: var(--black--red);
+}
+.footer-block {
+  width: 100dvw;
+  background-color: var(--secondary-red);
+  display: flex;
+  color: var(--black-red);
+  text-decoration: overline;
+  text-decoration-style: dotted;
+  justify-content: space-between;
+}
+
+.name {
+  margin-top: 6dvh;
+  font-size: x-small;
+}
+
+@media (prefers-color-scheme: light) {
+  .footer-block {
+    background-color: var(--white-red);
+    color: var(--black-red);
+  }
+  .footer-title {
+    color: var(--black-red);
+  }
+}

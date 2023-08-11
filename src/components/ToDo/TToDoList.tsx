@@ -89,14 +89,31 @@ const TTodoList: React.FC = () => {
       .catch((error) => console.error("Error deleting TV show:", error));
   };
 
-  const handleToggleCheck = (id: number) => {
+  const handleToggleCheck = async (id: number) => {
     const updatedTvShows = tvShows.map((tvShow) =>
       tvShow.id === id
         ? { ...tvShow, checked: !tvShow.checked, editing: false }
         : tvShow
     );
     setTvShows(updatedTvShows);
+    try {
+      const response = await fetch(`${backendServerUrl}/tv-shows/${id}`);
+      if (response.ok) {
+        const fetchedDetails = await response.json();
+        const updatedItems = updatedTvShows.map((tvShow) =>
+          tvShow.id === id
+            ? { ...tvShow, details: fetchedDetails, editing: false }
+            : tvShow
+        );
+        setTvShows(updatedItems);
+      } else {
+        console.error("Error fetching TV show details:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching TV show details:", error);
+    }
   };
+
 
   const handleDetailsChange = (
     id: number,
@@ -153,7 +170,7 @@ const TTodoList: React.FC = () => {
                   type="checkbox"
                   checked={tvShow.checked}
                   onChange={() => handleToggleCheck(tvShow.id)}
-                />{" "}
+                />
                 <span className="movie-detail-checkmark"></span>
               </label>
               <button
@@ -167,7 +184,7 @@ const TTodoList: React.FC = () => {
                   <label>Seasons:</label>
                   <input
                     type="number"
-                    value={tvShow.details.seasons.toString()}
+                    value={tvShow.details.seasons}
                     onChange={(e) =>
                       handleDetailsChange(tvShow.id, "seasons", e.target.value)
                     }
