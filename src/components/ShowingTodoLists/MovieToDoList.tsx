@@ -24,8 +24,46 @@ const MovieList: React.FC = () => {
       <ul>
         {movies.map((movie) => (
           <li key={movie.id}>
-            <h5>{movie.title}</h5>
-            <p>{movie.director}</p>
+            <table>
+              <th>
+                <td>Title:</td>
+              </th>
+              <td>
+                <h5>{movie.title}</h5>
+              </td>
+              <tr>
+                <td>
+                  <p>genre:</p>
+                </td>
+                <td>
+                  <p>{movie.genre}</p>
+                </td>
+              </tr>
+              <tr>
+                <td>Year:</td>
+                <td>
+                  <p>{movie.releaseYear}</p>
+                </td>
+              </tr>
+              <tr>
+                <td>Actors:</td>
+                <td>
+                  <p>{movie.notableActors}</p>
+                </td>
+              </tr>
+              <tr>
+                <td>Streaming platform:</td>
+                <td>
+                  <p>{movie.streamingService}</p>
+                </td>
+              </tr>
+              <tr>
+                <td>director:</td>
+                <td>
+                  <p>{movie.director}</p>
+                </td>
+              </tr>
+            </table>
           </li>
         ))}
       </ul>

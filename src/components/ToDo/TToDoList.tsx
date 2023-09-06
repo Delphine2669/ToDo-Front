@@ -7,13 +7,13 @@ interface Todo {
   id: number;
   title: string;
   checked: boolean;
-  details: TVShowDetails;
+  details: TVShowDetails | null;
   editing: boolean;
 }
 
 interface TVShowDetails {
-  seasons: number;
-  releaseYear: number;
+  seasons: number | string;
+  releaseYear: number | string;
   notableActors: string;
   genre: string;
   streamingService: string;
@@ -21,7 +21,9 @@ interface TVShowDetails {
 
 const TTodoList: React.FC = () => {
   const [tvShows, setTvShows] = useState<Todo[]>([]);
-  const [newTvShow, setNewTvShow] = useState<string>("");
+  const [editModeId, setEditModeId] = useState<number | null>(null);
+  const [addDetails, setAddDetails] = useState<boolean>(false);
+  const [newTvShow, setNewTvShow] = useState<string>(""); // Changed to string
   const backendServerUrl = "http://localhost:5000";
 
   useEffect(() => {
@@ -33,36 +35,53 @@ const TTodoList: React.FC = () => {
       .catch((error) => console.error("Error fetching TV shows:", error));
   }, []);
 
-  const handleAddTvShow = () => {
-    if (newTvShow.trim() !== "") {
-      const newTvShowEntry: Todo = {
-        id: Date.now(),
-        title: newTvShow,
-        checked: false,
-        editing: false,
-        details: {
-          seasons: 0,
-          releaseYear: 0,
-          notableActors: "",
-          genre: "",
-          streamingService: "",
-        },
-      };
+  const handleEditClick = (id: number) => {
+    setEditModeId(id);
+  };
 
-      fetch(`${backendServerUrl}/tv-shows`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newTvShowEntry),
-      })
-        .then((response) => response.json())
-        .then((createdTvShow) => {
-          setTvShows([...tvShows, createdTvShow]);
-          setNewTvShow("");
-          window.location.reload();
-        })
-        .catch((error) => console.error("Error creating new TV show :", error));
+  const handleSubmitClick = async (id: number) => {
+    const tvShowToSubmit = tvShows.find((tvShow) => tvShow.id === id);
+
+    if (tvShowToSubmit) {
+      try {
+        const response = await fetch(`${backendServerUrl}/tv-shows/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            details: tvShowToSubmit.details,
+          }),
+        });
+
+        if (response.ok) {
+          const updatedTvShows = tvShows.map((tvShow) =>
+            tvShow.id === id ? { ...tvShow, editing: false } : tvShow
+          );
+          setTvShows(updatedTvShows);
+          setEditModeId(null);
+
+          const updatedDetailsResponse = await fetch(
+            `${backendServerUrl}/tv-shows/${id}`
+          );
+          if (updatedDetailsResponse.ok) {
+            const updatedDetails = await updatedDetailsResponse.json();
+            const updatedItems = updatedTvShows.map((tvShow) =>
+              tvShow.id === id ? { ...tvShow, details: updatedDetails } : tvShow
+            );
+            setTvShows(updatedItems);
+          } else {
+            console.error(
+              "Error fetching updated TV show details:",
+              updatedDetailsResponse.status
+            );
+          }
+        } else {
+          console.error("Error updating TV show details:", response.status);
+        }
+      } catch (error) {
+        console.error("Error updating TV show details:", error);
+      }
     }
   };
 
@@ -92,18 +111,17 @@ const TTodoList: React.FC = () => {
   const handleToggleCheck = async (id: number) => {
     const updatedTvShows = tvShows.map((tvShow) =>
       tvShow.id === id
-        ? { ...tvShow, checked: !tvShow.checked, editing: false }
+        ? { ...tvShow, checked: !tvShow.checked, editing: true } // Always set editing to true when checked
         : tvShow
     );
     setTvShows(updatedTvShows);
+
     try {
       const response = await fetch(`${backendServerUrl}/tv-shows/${id}`);
       if (response.ok) {
         const fetchedDetails = await response.json();
         const updatedItems = updatedTvShows.map((tvShow) =>
-          tvShow.id === id
-            ? { ...tvShow, details: fetchedDetails, editing: false }
-            : tvShow
+          tvShow.id === id ? { ...tvShow, details: fetchedDetails } : tvShow
         );
         setTvShows(updatedItems);
       } else {
@@ -113,7 +131,6 @@ const TTodoList: React.FC = () => {
       console.error("Error fetching TV show details:", error);
     }
   };
-
 
   const handleDetailsChange = (
     id: number,
@@ -147,6 +164,42 @@ const TTodoList: React.FC = () => {
         );
     }
   };
+
+  const handleAddTvShow = () => {
+    if (newTvShow.trim() !== "") {
+      const newTvShowEntry: Todo = {
+        id: Date.now(),
+        title: newTvShow,
+        checked: false,
+        editing: false,
+        details: addDetails
+          ? {
+              seasons: 0,
+              releaseYear: 0,
+              notableActors: "",
+              genre: "",
+              streamingService: "",
+            }
+          : null, // or undefined if you prefer
+      };
+
+      fetch(`${backendServerUrl}/tv-shows`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newTvShowEntry),
+      })
+        .then((response) => response.json())
+        .then((createdTvShow) => {
+          setTvShows([...tvShows, createdTvShow]);
+          setNewTvShow("");
+          setAddDetails(false); // Reset addDetails state after submission
+        })
+        .catch((error) => console.error("Error creating new TV show:", error));
+    }
+  };
+
   return (
     <div className="to-do-list-block">
       <div className="tv-shows-list">
@@ -157,9 +210,77 @@ const TTodoList: React.FC = () => {
           onChange={(e) => setNewTvShow(e.target.value)}
           onKeyDown={handleInputKeyDown}
         />
+        <label>
+          <input
+            type="checkbox"
+            checked={addDetails}
+            onChange={() => setAddDetails(!addDetails)}
+          />
+          Add Details
+        </label>
         <button className="add-tv-show-button" onClick={handleAddTvShow}>
           <img src={plusImage} alt="add tv show" style={{ width: "18px" }} />
         </button>
+        {addDetails && (
+          <div className="subtask-panel">
+            {tvShows.map((tvShow) => (
+              <div key={tvShow.id}>
+                <label>Seasons:</label>
+                <input
+                  type="text"
+                  value={tvShow.details ? tvShow.details.seasons : ""}
+                  onChange={(e) =>
+                    handleDetailsChange(tvShow.id, "seasons", e.target.value)
+                  }
+                />
+                <label>Release Year:</label>
+                <input
+                  type="text"
+                  value={tvShow.details ? tvShow.details.releaseYear : ""}
+                  onChange={(e) =>
+                    handleDetailsChange(
+                      tvShow.id,
+                      "releaseYear",
+                      e.target.value
+                    )
+                  }
+                />
+                <label>Notable Actors:</label>
+                <input
+                  type="text"
+                  value={tvShow.details ? tvShow.details.notableActors : ""}
+                  onChange={(e) =>
+                    handleDetailsChange(
+                      tvShow.id,
+                      "notableActors",
+                      e.target.value
+                    )
+                  }
+                />
+                <label>Genre:</label>
+                <input
+                  type="text"
+                  value={tvShow.details ? tvShow.details.genre : ""}
+                  onChange={(e) =>
+                    handleDetailsChange(tvShow.id, "genre", e.target.value)
+                  }
+                />
+                <label>Streaming service:</label>
+                <input
+                  type="text"
+                  value={tvShow.details ? tvShow.details.streamingService : ""}
+                  onChange={(e) =>
+                    handleDetailsChange(
+                      tvShow.id,
+                      "streamingService",
+                      e.target.value
+                    )
+                  }
+                />
+              </div>
+            ))}
+          </div>
+        )}
         <ul>
           {tvShows.map((tvShow) => (
             <li key={tvShow.id} className={tvShow.checked ? "checked" : ""}>
@@ -183,15 +304,16 @@ const TTodoList: React.FC = () => {
                 <div className="subtask-panel">
                   <label>Seasons:</label>
                   <input
-                    type="number"
+                    type="text"
                     value={tvShow.details.seasons}
                     onChange={(e) =>
                       handleDetailsChange(tvShow.id, "seasons", e.target.value)
                     }
+                    readOnly={editModeId !== tvShow.id}
                   />
                   <label>Release Year:</label>
                   <input
-                    type="number"
+                    type="text"
                     value={tvShow.details.releaseYear}
                     onChange={(e) =>
                       handleDetailsChange(
@@ -200,6 +322,7 @@ const TTodoList: React.FC = () => {
                         e.target.value
                       )
                     }
+                    readOnly={editModeId !== tvShow.id}
                   />
                   <label>Notable Actors:</label>
                   <input
@@ -212,6 +335,7 @@ const TTodoList: React.FC = () => {
                         e.target.value
                       )
                     }
+                    readOnly={editModeId !== tvShow.id}
                   />
                   <label>Genre:</label>
                   <input
@@ -220,6 +344,7 @@ const TTodoList: React.FC = () => {
                     onChange={(e) =>
                       handleDetailsChange(tvShow.id, "genre", e.target.value)
                     }
+                    readOnly={editModeId !== tvShow.id}
                   />
                   <label>Streaming service:</label>
                   <input
@@ -232,19 +357,17 @@ const TTodoList: React.FC = () => {
                         e.target.value
                       )
                     }
+                    readOnly={editModeId !== tvShow.id}
                   />
-                  <button
-                    onClick={() => {
-                      const updatedTvShows = tvShows.map((show) =>
-                        show.id === tvShow.id
-                          ? { ...show, editing: !show.editing }
-                          : show
-                      );
-                      setTvShows(updatedTvShows);
-                    }}
-                  >
-                    {tvShow.editing ? "Save" : "Edit"}
-                  </button>
+                  {editModeId === tvShow.id ? (
+                    <button onClick={() => handleSubmitClick(tvShow.id)}>
+                      Submit
+                    </button>
+                  ) : (
+                    <button onClick={() => handleEditClick(tvShow.id)}>
+                      Edit
+                    </button>
+                  )}
                 </div>
               )}
             </li>
