@@ -2,16 +2,37 @@ ul,
 h2 {
   color: var(--white-red);
 }
+
 .showing-title {
   color: var(--white-red);
 }
+.table-container {
+  max-width: 100dvw;
+}
+/* Flex container for li elements */
+ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+
+  /* justify-content: space-between; Adjust as needed */
+}
+table {
+  width: 30dvw;
+}
+/* Individual li elements */
+li {
+  width: 30dvw; /* Adjust as needed */
+  margin-bottom: 10px; /* Add spacing between items */
+  /* Other styles for individual li elements */
+}
+
 .showing-movie-block,
 .showing-tvshow-block {
-  border-radius: 3dvw;
   border: 0.6dvw dotted rgb(255, 77, 77);
-  width: 30dvw;
-  font-size: medium;
-  margin-bottom: 5dvh;
+  width: 100%; /* Take the whole width of the container */
+  /* Other styles for .showing-movie-block and .showing-tvshow-block */
 }
 
 @media (prefers-color-scheme: light) {

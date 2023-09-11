@@ -14,27 +14,29 @@
   --black-green: #004935;
   --secondary-green: #80ffdc;
 }
-
+.navbar {
+  width: 100dvw;
+  display: flex;
+  justify-content: space-around;
+}
+.movie-link,
+.tv-show-link {
+  text-decoration: none;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+    "Lucida Sans", Arial, sans-serif;
+  font-size: larger;
+  color: var(--secondary-red);
+  font-weight: bold;
+}
+.homepage-back-link {
+  display: flex;
+  font-weight: 700;
+}
 .logo {
   height: 6em;
   padding: 1.5em;
   will-change: filter;
   transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -62,4 +64,10 @@
 .side-showing-db {
   display: flex;
   gap: 90px;
+}
+@media (prefers-color-scheme: light) {
+  .movie-link,
+  .tv-show-link {
+    color: var(--black-red);
+  }
 }

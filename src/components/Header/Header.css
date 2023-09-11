@@ -1,16 +1,23 @@
 .header-title {
   color: var(--secondary-red);
 }
+
 .logo-container {
   display: flex;
   gap: 2dvw;
 }
+
 .logo-header {
   display: flex;
   align-items: flex-start;
+  background-image: url(${lightLogo});
 }
+
 @media (prefers-color-scheme: light) {
   .header-title {
     color: var(--black-red);
+  }
+  .logo-header {
+    background-image: url(${darkLogo});
   }
 }

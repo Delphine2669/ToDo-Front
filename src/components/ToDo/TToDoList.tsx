@@ -103,7 +103,6 @@ const TTodoList: React.FC = () => {
         } else {
           console.error("Error deleting TV show:", response.status);
         }
-        window.location.reload();
       })
       .catch((error) => console.error("Error deleting TV show:", error));
   };
