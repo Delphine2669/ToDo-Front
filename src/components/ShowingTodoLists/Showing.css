@@ -18,6 +18,13 @@ ul {
 
   /* justify-content: space-between; Adjust as needed */
 }
+
+.navbar {
+  padding: 5dvw;
+}
+.to-do-display {
+  display: flex;
+}
 table {
   width: 30dvw;
 }
