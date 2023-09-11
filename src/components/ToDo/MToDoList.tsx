@@ -40,7 +40,7 @@ const MTodoList: React.FC = () => {
         editing: false,
         details: {
           director: "",
-          releaseYear: 0,
+          releaseYear: 1900,
           notableActors: "",
           genre: "",
           streamingService: "",
@@ -123,6 +123,22 @@ const MTodoList: React.FC = () => {
         : movie
     );
     setMovies(updatedItems);
+    if (field === "releaseYear") {
+      // Convert the 'value' to a number and update the state
+      const numericValue = parseInt(value, 10);
+      if (!isNaN(numericValue)) {
+        // Update the state with the numeric value
+        const updatedItems = movies.map((movie) =>
+          movie.id === id
+            ? {
+                ...movie,
+                details: { ...movie.details, [field]: numericValue },
+              }
+            : movie
+        );
+        setMovies(updatedItems);
+      }
+    }
 
     if (!movies.find((movie) => movie.id === id)?.editing) {
       fetch(`${backendServerUrl}/movies/${id}`, {
@@ -217,6 +233,18 @@ const MTodoList: React.FC = () => {
                     value={movie.details.genre}
                     onChange={(e) =>
                       handleDetailsChange(movie.id, "genre", e.target.value)
+                    }
+                  />
+                  <label>Streaming service:</label>
+                  <input
+                    type="text"
+                    value={movie.details.streamingService}
+                    onChange={(e) =>
+                      handleDetailsChange(
+                        movie.id,
+                        "streamingService",
+                        e.target.value
+                      )
                     }
                   />
                   <button

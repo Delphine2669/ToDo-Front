@@ -17,9 +17,11 @@ const TvShowList: React.FC = () => {
         {tvShows.map((tvShows) => (
           <li key={tvShows.id}>
             <h5>{tvShows.title}</h5>
+            <p>{tvShows.notableActors}</p>
             <p>{tvShows.seasons}</p>
             <p>{tvShows.genre}</p>
             <p>{tvShows.releaseYear}</p>
+            <p>{tvShows.streamingService}</p>
           </li>
         ))}
       </ul>
